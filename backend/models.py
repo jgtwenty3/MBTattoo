@@ -153,6 +153,9 @@ class Appointment(db.Model,SerializerMixin):
             'id': self.id,
             'client_id': self.client_id,
             'user_id': self.user_id,
+            'appointment_datetime': self.appointment_datetime.isoformat(),  # Convert datetime to string
+            'duration_minutes': self.duration_minutes,
+            'notes': self.notes
             # Include other attributes as needed
         }
         print("Appointment serialization complete.")

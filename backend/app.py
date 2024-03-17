@@ -4,7 +4,7 @@ from sqlalchemy import desc
 
 from config import app, db, migrate, api, bcrypt
 
-from models import db, User, Client, ConsentForm
+from models import db, User, Client, ConsentForm, Appointment
 
 @app.route('/')
 def home():
@@ -131,6 +131,85 @@ def clients_by_id(id):
         db.session.commit()
     
     return client.to_dict(), 200
+
+@app.route('/appointments', methods = ['GET', 'POST'])
+def all_appointments():
+    if request.method == 'GET':
+        all_appointments = Appointment.query.all()
+        results = []
+        for appointment in all_appointments:
+            results.append(appointment.to_dict())
+        return results, 200
+    
+    elif request.method == 'POST': 
+        json_data = resuest.get_json()
+        new_appointment = Appointment(
+            appointment_datetime = json_data.get('appointment_datetime'),
+            duration_minutes = json_data.get('duration_minutes'),
+            notes = json_data('get_notes')
+
+        )
+        db.session.add(new_appointment)
+        db.session.commit()
+
+        return new_appointment.to_dict(), 201
+
+@app.route('/appointments/<int:id>', methods = ['GET', 'PATCH', 'DELETE'])
+def appointments_by_id(id):
+    appointment = Appointment.query.filter(Appointment.id ==id).first()
+
+    if appointment is None:
+        return {'error': 'Appointment not found'}, 400
+    if request.method == "GET":
+        return appointment.to_dict(), 200
+    elif request.method == "DELETE":
+        db.session.delete(appointment)
+        db.session.commit()
+    elif request.method == "PATCH":
+        json_data = request.get_json()
+
+        for field in json_data:
+            if field != "appointment":
+                setattr(appointment,field, json_data[field])
+        db.session.add(appointment)
+        db.session.commit()
+    return appointment.to_dict(), 200
+
+@app.route('/users')
+def all_users():
+    all_users = User.query.all()
+    results = []
+
+    for user in all_users:
+        results.append(user.to_dict())
+    return results, 200
+
+@app.route('/users/<int:id>', methods = ['GET', 'PATCH', 'DELETE'])
+def users_by_id(id):
+    user = User.query.filter(User.id == id ).first()
+
+    if user is None:
+        return {'error': "User not found"}, 404
+    if request.method == 'GET':
+        return user.to_dict(), 200
+    elif request.method == 'DELETE':
+        db.session.delete(user)
+        db.session.commit()
+        return{},204
+    elif request.method == 'PATCH':
+        json_data = request.get_json()
+        print(f"Received PATCH request with data: {json_data}")
+
+        for field in json_data:
+            if field != "user":
+                setattr(user, field, json_data[field])
+        
+        db.session.add(user)
+        db.session.commit()
+    
+    return user.to_dict(), 200 
+
+
 
 
 
