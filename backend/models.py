@@ -1,14 +1,11 @@
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.ext.associationproxy import association_proxy
-from flask_bcrypt import Bcrypt
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
 from sqlalchemy.orm import relationship
-
 from config import db
+from flask_bcrypt import Bcrypt
 
 bcrypt = Bcrypt()
-
 
 class User(db.Model, SerializerMixin):
     __tablename__= 'users'
@@ -23,6 +20,8 @@ class User(db.Model, SerializerMixin):
 
     clients = relationship("Client", back_populates="user")
     appointments = relationship("Appointment", back_populates="user")
+
+    serialize_rules = ['-client.user','-appointments.user']
 
     @hybrid_property
     def password_hash(self):
@@ -39,7 +38,8 @@ class User(db.Model, SerializerMixin):
         return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8')) if self._password_hash else False
 
     def to_dict(self):
-        return {
+        print(f"Serializing User: {self.id}")
+        result = {
             'id': self.id,
             'username': self.username,
             'usertype': self.usertype,
@@ -47,6 +47,8 @@ class User(db.Model, SerializerMixin):
             'phone': self.phone,
             'address': self.address
         }
+        print("User serialization complete.")
+        return result
 
     def __repr__(self):
         return f'<User {self.id}: {self.username}>'
@@ -66,15 +68,29 @@ class Client(db.Model, SerializerMixin):
     consent_form = relationship("ConsentForm", back_populates="client", uselist=False)
     appointments = relationship("Appointment", back_populates="client")
 
+    serialize_rules = ['-user.clients', '-consentform.client', '-appointments.client']
+
     def __repr__(self):
         return f'<Client {self.id}: {self.name}>'
+
+    def to_dict(self):
+        print(f"Serializing Client: {self.id}")
+        result = {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'address': self.address,
+            'notes': self.notes
+        }
+        print("Client serialization complete.")
+        return result
 
 class ConsentForm(db.Model,SerializerMixin):
     __tablename__ = 'consent_forms'
 
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), unique=True, nullable=False)
-    
     
     waive_and_release = db.Column(db.Boolean, nullable = False, default = False)
     questions = db.Column(db.Boolean, nullable=False, default=False)
@@ -97,8 +113,20 @@ class ConsentForm(db.Model,SerializerMixin):
 
     client = relationship("Client", back_populates="consent_form")
 
+    serialize_rules = ['-client.consent_form']
+
     def __repr__(self):
         return f'<ConsentForm {self.id} for Client {self.client_id}>'
+
+    def to_dict(self):
+        print(f"Serializing ConsentForm: {self.id}")
+        result = {
+            'id': self.id,
+            'client_id': self.client_id,
+            # Include other attributes as needed
+        }
+        print("ConsentForm serialization complete.")
+        return result
 
 class Appointment(db.Model,SerializerMixin):
     __tablename__ = 'appointments'
@@ -114,13 +142,18 @@ class Appointment(db.Model,SerializerMixin):
     client = relationship("Client", back_populates="appointments")
     user = relationship("User", back_populates="appointments")
 
+    serialize_rules = ['-client.appointments', '-user.appointments']
+
     def __repr__(self):
         return f'<Appointment {self.id} for Client {self.client_id} at {self.appointment_datetime}>'
-   
-    
-    
-    
 
-
-
-    
+    def to_dict(self):
+        print(f"Serializing Appointment: {self.id}")
+        result = {
+            'id': self.id,
+            'client_id': self.client_id,
+            'user_id': self.user_id,
+            # Include other attributes as needed
+        }
+        print("Appointment serialization complete.")
+        return result

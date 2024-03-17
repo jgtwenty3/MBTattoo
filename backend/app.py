@@ -4,7 +4,7 @@ from sqlalchemy import desc
 
 from config import app, db, migrate, api, bcrypt
 
-from models import db, User
+from models import db, User, Client, ConsentForm
 
 @app.route('/')
 def home():
@@ -84,6 +84,56 @@ def logout():
     session.pop('user_id', None)
     session.pop('user_type', None)
     return {}, 204
+
+@app.route('/clients', methods = ['GET', 'POST'])
+def all_clients():
+    if request.method == "GET":
+        all_clients = Client.query.all()
+        results = []
+        for client in all_clients:
+            results.append(client.to_dict())
+        return results, 200
+    
+    elif request.method == "POST":
+        json_data = request.get_json()
+        new_client = Client(
+            name = json_data.get('name'),
+            email = json_data.get('email'),
+            phone = json_data.get('phone'),
+            address = json_data.get('address'),
+            notes = json_data.get('notes')
+
+        )
+        db.session.add(new_client)
+        db.session.commit()
+
+        return new_client.to_dict(), 201
+@app.route('/clients/<int:id>', methods = ["GET", "PATCH", "DELETE"])
+def clients_by_id(id):
+    client = Client.query.filter(Client.id == id).first()
+
+    if client is None:
+        return {'error':"Animal not found"}, 400
+    if request.method == "GET":
+        return client.to_dict(), 200
+    elif request.method == "DELETE": 
+        db.session.delete(client)
+        db.session.commit()
+        return {}, 204
+    elif request.method == "PATCH":
+        json_data = request.get_json()
+
+        for field in json_data:
+            if field != "client":
+                setattr(client, field, json_data[field])
+        
+        db.session.add(client)
+        db.session.commit()
+    
+    return client.to_dict(), 200
+
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
