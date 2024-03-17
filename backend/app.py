@@ -10,7 +10,7 @@ from models import db, User, Client, ConsentForm, Appointment
 def home():
     return ''
 
-@app.route('/signup', methods=['POST'])
+@app.route("/signup", methods=["GET","POST"])
 def signup():
     json_data = request.get_json()
 
@@ -30,9 +30,9 @@ def signup():
     # Create a new user instance
     new_user = User(
         username=json_data['username'],
-        password_hash = generate_password_hash(json_data['password']),  # Use password_hash instead of password
+        password_hash =(json_data['password']),
+        email=json_data['email'], # Use password_hash instead of password
         usertype=json_data['usertype'],
-        email=json_data['email'],
         phone=json_data['phone'],
         address=json_data['address'],
     )
@@ -101,6 +101,7 @@ def all_clients():
             email = json_data.get('email'),
             phone = json_data.get('phone'),
             address = json_data.get('address'),
+            date_of_birth = json_data.get('date_of_birth'),
             notes = json_data.get('notes')
 
         )

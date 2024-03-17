@@ -29,6 +29,7 @@ if __name__ == '__main__':
                 name=fake.name(),
                 email=fake.email(),
                 phone=fake.phone_number(),
+                date_of_birth=fake.date_of_birth(),
                 address=fake.address(),
                 notes=fake.text(),
                 user=user,
