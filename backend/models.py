@@ -132,12 +132,14 @@ class ConsentForm(db.Model,SerializerMixin):
 class Appointment(db.Model,SerializerMixin):
     __tablename__ = 'appointments'
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+    start = db.Column(db.DateTime)
+    end = db.Column(db.DateTime)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
-    appointment_datetime = db.Column(db.DateTime, nullable=False)
-    duration_minutes = db.Column(db.Integer, nullable=False)
+   
     notes = db.Column(db.Text)
 
     client = relationship("Client", back_populates="appointments")
@@ -152,10 +154,11 @@ class Appointment(db.Model,SerializerMixin):
         print(f"Serializing Appointment: {self.id}")
         result = {
             'id': self.id,
+            'title':self.title,
             'client_id': self.client_id,
             'user_id': self.user_id,
-            'appointment_datetime': self.appointment_datetime.isoformat(),  # Convert datetime to string
-            'duration_minutes': self.duration_minutes,
+            'start': self.start.isoformat(),  # Convert datetime to string
+            'end': self.end.isoformat(),
             'notes': self.notes
             # Include other attributes as needed
         }

@@ -5,12 +5,12 @@ from random import choice as rc, randint
 
 if __name__ == '__main__':
     fake = Faker()
-    
+
     with app.app_context():
         print("Starting seed...")
 
         # Seed Users
-        for _ in range(10):  # Adjust the number of users you want
+        for _ in range(10):
             user = User(
                 username=fake.user_name(),
                 password_hash=fake.password(),
@@ -20,11 +20,11 @@ if __name__ == '__main__':
                 address=fake.address(),
             )
             db.session.add(user)
-        db.session.commit()  # Commit users first to get valid user IDs
+        db.session.commit()
 
         # Seed Clients and Consent Forms
-        for _ in range(20):  # Adjust the number of clients you want
-            user = User.query.get(randint(1, User.query.count()))  # Get a random user
+        for _ in range(20):
+            user = User.query.get(randint(1, User.query.count()))
             client = Client(
                 name=fake.name(),
                 email=fake.email(),
@@ -35,9 +35,8 @@ if __name__ == '__main__':
                 user=user,
             )
             db.session.add(client)
-            
+
             consent_form = ConsentForm(
-                client=client,
                 waive_and_release=fake.boolean(),
                 questions=fake.boolean(),
                 aftercare=fake.boolean(),
@@ -53,21 +52,23 @@ if __name__ == '__main__':
                 city=fake.city(),
                 state=fake.state(),
                 date_signed=fake.date_time_this_year(),
-                signature=fake.image_url(width=100, height=100),  # Fake signature as image URL
+                signature=fake.image_url(width=100, height=100),
+                client=client,
             )
             db.session.add(consent_form)
 
         db.session.commit()
 
         # Seed Appointments
-        for _ in range(30):  # Adjust the number of appointments you want
-            client = Client.query.get(randint(1, Client.query.count()))  # Get a random client
-            user = User.query.get(randint(1, User.query.count()))  # Get a random user
+        for _ in range(30):
+            client = Client.query.get(randint(1, Client.query.count()))
+            user = User.query.get(randint(1, User.query.count()))
             appointment = Appointment(
+                title=fake.sentence(),
+                start=fake.date_time_this_year(),
+                end=fake.date_time_this_year(),
                 client=client,
                 user=user,
-                appointment_datetime=fake.date_time_this_year(),
-                duration_minutes=randint(30, 240),
                 notes=fake.text(),
             )
             db.session.add(appointment)
